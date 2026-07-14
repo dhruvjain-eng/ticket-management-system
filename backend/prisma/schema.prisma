@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Prisma schema — Support Ticket Management System (Core)
+// Spec: tool-specific/cursor-workflow/spec.md §2
 
 generator client {
   provider = "prisma-client"
@@ -10,4 +8,84 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums (spec §2.2)
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  AGENT
+  ADMIN
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(255)
+  role      UserRole
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  createdTickets  Ticket[]  @relation("CreatedTickets")
+  assignedTickets Ticket[]  @relation("AssignedTickets")
+  comments        Comment[]
+
+  @@map("users")
+}
+
+model Ticket {
+  id           String         @id @default(uuid()) @db.Uuid
+  title        String         @db.VarChar(200)
+  description  String         @db.Text
+  priority     TicketPriority
+  status       TicketStatus   @default(OPEN)
+  assignedToId String?        @map("assigned_to_id") @db.Uuid
+  createdById  String         @map("created_by_id") @db.Uuid
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  assignedTo User?     @relation("AssignedTickets", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdBy  User      @relation("CreatedTickets", fields: [createdById], references: [id], onDelete: Restrict)
+  comments   Comment[]
+
+  @@index([status], map: "tickets_status_idx")
+  @@index([assignedToId], map: "tickets_assigned_to_id_idx")
+  @@index([createdById], map: "tickets_created_by_id_idx")
+  @@index([createdAt(sort: Desc)], map: "tickets_created_at_idx")
+  @@map("tickets")
+}
+
+model Comment {
+  id          String   @id @default(uuid()) @db.Uuid
+  ticketId    String   @map("ticket_id") @db.Uuid
+  message     String   @db.Text
+  createdById String   @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  ticket    Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  createdBy User   @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([ticketId], map: "comments_ticket_id_idx")
+  @@index([ticketId, createdAt], map: "comments_ticket_id_created_at_idx")
+  @@map("comments")
 }
