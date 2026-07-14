@@ -3,6 +3,7 @@ import {
   createTicket,
   getTicketById,
   listTickets,
+  transitionTicketStatus,
   updateTicket,
 } from "../controllers/ticket.controller.js";
 import { validate } from "../middleware/validate.js";
@@ -12,6 +13,7 @@ import {
   createTicketBodySchema,
   listTicketsQuerySchema,
   updateTicketBodySchema,
+  updateTicketStatusBodySchema,
 } from "../validators/ticket.validator.js";
 
 export const ticketRoutes = Router();
@@ -26,6 +28,12 @@ ticketRoutes.post(
   "/",
   validate({ body: createTicketBodySchema }),
   asyncHandler(createTicket),
+);
+
+ticketRoutes.patch(
+  "/:id/status",
+  validate({ params: uuidParamSchema, body: updateTicketStatusBodySchema }),
+  asyncHandler(transitionTicketStatus),
 );
 
 ticketRoutes.get(

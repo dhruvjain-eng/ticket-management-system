@@ -42,6 +42,11 @@ export const updateTicketBodySchema = z
     message: "At least one field is required",
   });
 
+export const updateTicketStatusBodySchema = z.object({
+  status: z.nativeEnum(TicketStatus, { message: "Invalid status value" }),
+});
+
 export type ListTicketsQuery = z.infer<typeof listTicketsQuerySchema>;
 export type CreateTicketBody = z.infer<typeof createTicketBodySchema>;
 export type UpdateTicketBody = z.infer<typeof updateTicketBodySchema>;
+export type UpdateTicketStatusBody = z.infer<typeof updateTicketStatusBodySchema>;
