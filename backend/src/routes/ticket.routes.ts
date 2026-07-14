@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { addComment } from "../controllers/comment.controller.js";
 import {
   createTicket,
   getTicketById,
@@ -9,6 +10,7 @@ import {
 import { validate } from "../middleware/validate.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { uuidParamSchema } from "../validators/common.validator.js";
+import { createCommentBodySchema } from "../validators/comment.validator.js";
 import {
   createTicketBodySchema,
   listTicketsQuerySchema,
@@ -34,6 +36,12 @@ ticketRoutes.patch(
   "/:id/status",
   validate({ params: uuidParamSchema, body: updateTicketStatusBodySchema }),
   asyncHandler(transitionTicketStatus),
+);
+
+ticketRoutes.post(
+  "/:id/comments",
+  validate({ params: uuidParamSchema, body: createCommentBodySchema }),
+  asyncHandler(addComment),
 );
 
 ticketRoutes.get(
