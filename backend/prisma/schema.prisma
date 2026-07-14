@@ -2,8 +2,9 @@
 // Spec: tool-specific/cursor-workflow/spec.md §2
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "esm"
 }
 
 datasource db {
