@@ -1,5 +1,6 @@
 import cors from "cors";
 import express, { type Express } from "express";
+import { apiRouter } from "./routes/index.js";
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { notFoundHandler } from "./middleware/not-found.js";
@@ -19,7 +20,7 @@ export function createApp(): Express {
 
   app.use(express.json());
 
-  // API routes will be mounted at /api/v1 in a later task (T-038+).
+  app.use("/api/v1", apiRouter);
 
   app.use(notFoundHandler);
   app.use(errorHandler);
