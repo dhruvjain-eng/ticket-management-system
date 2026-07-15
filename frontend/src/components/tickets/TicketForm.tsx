@@ -4,6 +4,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { formatPriorityLabel } from "@/lib/labels";
 import type { FieldErrors } from "@/lib/form-errors";
+import { isCreateTicketFormValid } from "@/lib/form-validation";
 import { TicketPriority } from "@/types";
 import type { UserSummary } from "@/types";
 
@@ -58,6 +59,8 @@ export function TicketForm({
     onChange({ ...values, [field]: value });
   }
 
+  const canSubmit = isCreateTicketFormValid(values);
+
   return (
     <form
       className="space-y-4 rounded-lg border border-slate-200 bg-white p-6"
@@ -71,6 +74,7 @@ export function TicketForm({
         name="title"
         value={values.title}
         maxLength={200}
+        hint="Maximum 200 characters"
         onChange={(event) => updateField("title", event.target.value)}
         error={fieldErrors.title}
         required
@@ -79,6 +83,8 @@ export function TicketForm({
         label="Description"
         name="description"
         value={values.description}
+        maxLength={10000}
+        hint="Maximum 10,000 characters"
         onChange={(event) => updateField("description", event.target.value)}
         error={fieldErrors.description}
         required
@@ -92,6 +98,7 @@ export function TicketForm({
         }
         options={priorityOptions}
         error={fieldErrors.priority}
+        required
       />
       <Select
         label="Created By"
@@ -100,6 +107,7 @@ export function TicketForm({
         onChange={(event) => updateField("createdById", event.target.value)}
         options={userOptions}
         error={fieldErrors.createdById}
+        required
       />
       <Select
         label="Assignee"
@@ -111,7 +119,7 @@ export function TicketForm({
       />
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <Button type="submit" loading={submitting}>
+        <Button type="submit" loading={submitting} disabled={!canSubmit}>
           {submitLabel}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>

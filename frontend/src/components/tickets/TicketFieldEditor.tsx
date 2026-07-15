@@ -4,6 +4,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { formatPriorityLabel } from "@/lib/labels";
 import type { FieldErrors } from "@/lib/form-errors";
+import { isEditTicketFormValid } from "@/lib/form-validation";
 import { TicketPriority } from "@/types";
 import type { UserSummary } from "@/types";
 
@@ -46,6 +47,8 @@ export function TicketFieldEditor({
     })),
   ];
 
+  const canSave = isEditTicketFormValid(values);
+
   function updateField<K extends keyof TicketEditValues>(
     field: K,
     value: TicketEditValues[K],
@@ -58,47 +61,63 @@ export function TicketFieldEditor({
       <div className="flex items-center justify-between gap-4">
         <h2 className="text-lg font-semibold text-slate-900">Edit Ticket</h2>
         {successMessage ? (
-          <p className="text-sm font-medium text-green-700">{successMessage}</p>
+          <p role="status" aria-live="polite" className="text-sm font-medium text-green-700">
+            {successMessage}
+          </p>
         ) : null}
       </div>
 
-      <Input
-        label="Title"
-        name="title"
-        value={values.title}
-        maxLength={200}
-        onChange={(event) => updateField("title", event.target.value)}
-        error={fieldErrors.title}
-      />
-      <Textarea
-        label="Description"
-        name="description"
-        value={values.description}
-        onChange={(event) => updateField("description", event.target.value)}
-        error={fieldErrors.description}
-      />
-      <Select
-        label="Priority"
-        name="priority"
-        value={values.priority}
-        onChange={(event) =>
-          updateField("priority", event.target.value as TicketPriority)
-        }
-        options={priorityOptions}
-        error={fieldErrors.priority}
-      />
-      <Select
-        label="Assignee"
-        name="assignedToId"
-        value={values.assignedToId}
-        onChange={(event) => updateField("assignedToId", event.target.value)}
-        options={assigneeOptions}
-        error={fieldErrors.assignedToId}
-      />
+      <form
+        className="space-y-4"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSave();
+        }}
+      >
+        <Input
+          label="Title"
+          name="title"
+          value={values.title}
+          maxLength={200}
+          hint="Maximum 200 characters"
+          onChange={(event) => updateField("title", event.target.value)}
+          error={fieldErrors.title}
+          required
+        />
+        <Textarea
+          label="Description"
+          name="description"
+          value={values.description}
+          maxLength={10000}
+          hint="Maximum 10,000 characters"
+          onChange={(event) => updateField("description", event.target.value)}
+          error={fieldErrors.description}
+          required
+        />
+        <Select
+          label="Priority"
+          name="priority"
+          value={values.priority}
+          onChange={(event) =>
+            updateField("priority", event.target.value as TicketPriority)
+          }
+          options={priorityOptions}
+          error={fieldErrors.priority}
+          required
+        />
+        <Select
+          label="Assignee"
+          name="assignedToId"
+          value={values.assignedToId}
+          onChange={(event) => updateField("assignedToId", event.target.value)}
+          options={assigneeOptions}
+          error={fieldErrors.assignedToId}
+        />
 
-      <Button type="button" onClick={onSave} loading={saving}>
-        Save Changes
-      </Button>
+        <Button type="submit" loading={saving} disabled={!canSave}>
+          Save Changes
+        </Button>
+      </form>
     </section>
   );
 }

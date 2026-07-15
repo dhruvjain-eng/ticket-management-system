@@ -1,5 +1,5 @@
-import { DashboardView } from "@/components/tickets/DashboardView";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return <DashboardView />;
+  redirect("/tickets");
 }

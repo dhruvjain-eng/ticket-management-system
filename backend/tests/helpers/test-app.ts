@@ -20,3 +20,11 @@ export async function transitionTicket(ticketId: string, status: TicketStatus) {
     .patch(`/api/v1/tickets/${ticketId}/status`)
     .send({ status });
 }
+
+export async function transitionTicketRaw(ticketId: string, body: unknown) {
+  const application = await getTestApp();
+
+  return request(application)
+    .patch(`/api/v1/tickets/${ticketId}/status`)
+    .send(body);
+}

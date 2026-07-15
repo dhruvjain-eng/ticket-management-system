@@ -21,7 +21,7 @@ export function TicketListView() {
 
   const filters = useMemo(
     () => ({
-      search: debouncedSearch || undefined,
+      search: debouncedSearch.trim() || undefined,
       status: (status || undefined) as TicketStatus | undefined,
     }),
     [debouncedSearch, status],
