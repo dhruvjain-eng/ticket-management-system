@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CommentForm, type CommentFormValues } from "@/components/tickets/CommentForm";
+import { CommentList } from "@/components/tickets/CommentList";
 import { TicketDetailHeader } from "@/components/tickets/TicketDetailHeader";
 import {
   TicketFieldEditor,
@@ -10,6 +12,7 @@ import {
 import { StatusTransitionControl } from "@/components/tickets/StatusTransitionControl";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { useActingUser } from "@/context/ActingUserContext";
 import { useTicket } from "@/hooks/useTicket";
 import { useUsers } from "@/hooks/useUsers";
 import { ApiError } from "@/lib/errors";
@@ -18,7 +21,7 @@ import {
   mapApiDetailsToFieldErrors,
   type FieldErrors,
 } from "@/lib/form-errors";
-import { transitionTicketStatus, updateTicket } from "@/lib/api/tickets";
+import { addComment, transitionTicketStatus, updateTicket } from "@/lib/api/tickets";
 import type { TicketDetail, TicketStatus } from "@/types";
 
 interface TicketDetailViewProps {
@@ -34,9 +37,15 @@ function toEditValues(ticket: TicketDetail): TicketEditValues {
   };
 }
 
+const emptyCommentValues: CommentFormValues = {
+  message: "",
+  createdById: "",
+};
+
 export function TicketDetailView({ ticketId }: TicketDetailViewProps) {
   const { ticket, loading, error, reload, setTicket } = useTicket(ticketId);
   const { users, loading: usersLoading, error: usersError, reload: reloadUsers } = useUsers();
+  const { resolveActingUser } = useActingUser();
   const [editValues, setEditValues] = useState<TicketEditValues | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -44,12 +53,23 @@ export function TicketDetailView({ ticketId }: TicketDetailViewProps) {
   const [saving, setSaving] = useState(false);
   const [transitionError, setTransitionError] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState(false);
+  const [commentValues, setCommentValues] = useState<CommentFormValues>(emptyCommentValues);
+  const [commentFieldErrors, setCommentFieldErrors] = useState<FieldErrors>({});
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [submittingComment, setSubmittingComment] = useState(false);
 
   useEffect(() => {
     if (ticket) {
       setEditValues(toEditValues(ticket));
     }
   }, [ticket]);
+
+  useEffect(() => {
+    const actingUser = resolveActingUser(users);
+    if (actingUser && !commentValues.createdById) {
+      setCommentValues((current) => ({ ...current, createdById: actingUser.id }));
+    }
+  }, [users, resolveActingUser, commentValues.createdById]);
 
   async function handleSave() {
     if (!editValues) {
@@ -101,6 +121,35 @@ export function TicketDetailView({ ticketId }: TicketDetailViewProps) {
       );
     } finally {
       setTransitioning(false);
+    }
+  }
+
+  async function handleAddComment() {
+    setSubmittingComment(true);
+    setCommentError(null);
+    setCommentFieldErrors({});
+
+    try {
+      await addComment(ticketId, {
+        message: commentValues.message.trim(),
+        createdById: commentValues.createdById,
+      });
+
+      setCommentValues((current) => ({
+        ...emptyCommentValues,
+        createdById: current.createdById,
+      }));
+
+      await reload();
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setCommentError(err.message);
+        setCommentFieldErrors(mapApiDetailsToFieldErrors(err.details));
+      } else {
+        setCommentError(getErrorMessage(err, "Failed to add comment"));
+      }
+    } finally {
+      setSubmittingComment(false);
     }
   }
 
@@ -160,6 +209,26 @@ export function TicketDetailView({ ticketId }: TicketDetailViewProps) {
         onTransition={(status) => void handleTransition(status)}
         onDismissError={() => setTransitionError(null)}
       />
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold text-slate-900">
+          Comments ({ticket.comments.length})
+        </h2>
+
+        {commentError ? (
+          <ErrorBanner message={commentError} onDismiss={() => setCommentError(null)} />
+        ) : null}
+
+        <CommentList comments={ticket.comments} />
+        <CommentForm
+          values={commentValues}
+          users={users}
+          fieldErrors={commentFieldErrors}
+          submitting={submittingComment}
+          onChange={setCommentValues}
+          onSubmit={() => void handleAddComment()}
+        />
+      </section>
     </div>
   );
 }
