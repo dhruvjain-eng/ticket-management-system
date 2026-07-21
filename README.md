@@ -95,7 +95,9 @@ ticket-management-system/
 │       ├── context/               # Acting user context
 │       └── types/                 # Frontend DTO types
 │
-├── tool-specific/cursor-workflow/   # Planning and acceptance docs
+├── acceptance-criteria.md           # Submission checklist (Core)
+├── ai-prompts/                      # Prompt summaries by activity
+├── tool-specific/cursor-workflow/   # Spec, tasks, rules, full prompt-history.md
 └── README.md
 ```
 
@@ -279,11 +281,13 @@ npm start
 
 ## Run tests
 
-Integration tests live in the backend and cover the ticket status state machine against a real database.
+Integration tests live in the backend and cover the ticket status state machine against a real database. Unit tests cover pure status-machine rules and Zod validators without a database.
 
 ```bash
 cd backend
-npm test
+npm test              # unit + integration
+npm run test:unit     # unit only (no DB required)
+npm run test:integration   # integration only (requires DATABASE_URL)
 ```
 
 `DATABASE_URL` must be set (via `.env` or `.env.test`). Tests run `prisma migrate deploy` on startup and clean up tickets they create.
@@ -349,6 +353,22 @@ Because there is no authentication, the header **Acting as** dropdown selects wh
 - Persists in `localStorage` between visits
 
 You can override the selection on each form before submitting.
+
+---
+
+## Submission documentation
+
+Lifecycle artifacts for the JS–AI Capability Exercise:
+
+| Document | Purpose |
+|----------|---------|
+| [acceptance-criteria.md](acceptance-criteria.md) | Core checklist (official guide criteria) |
+| [tool-specific/cursor-workflow/acceptance-criteria.md](tool-specific/cursor-workflow/acceptance-criteria.md) | Detailed Given/When/Then scenarios |
+| [tool-specific/cursor-workflow/prompt-history.md](tool-specific/cursor-workflow/prompt-history.md) | Full chronological AI prompt log |
+| [ai-prompts/](ai-prompts/) | Curated prompt summaries (planning, design, implementation, testing, debugging, code review, documentation) |
+| [tool-specific/cursor-workflow/](tool-specific/cursor-workflow/) | Project context, spec, tasks, Cursor rules |
+
+See also: [candidate-info.md](candidate-info.md), [tool-workflow.md](tool-workflow.md), [reflection.md](reflection.md), [pr-description.md](pr-description.md).
 
 ---
 

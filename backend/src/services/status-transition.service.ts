@@ -1,16 +1,15 @@
 import { TicketStatus } from "../../generated/prisma/client.js";
+import {
+  canTransition,
+  formatAllowedTransitions,
+  getAllowedTransitions,
+} from "../domain/ticket-status-machine.js";
 import { prisma } from "../lib/prisma.js";
 import type { TicketDetail } from "../types/ticket.js";
 import { AppError } from "../utils/app-error.js";
 import { toTicketDetail } from "../utils/ticket.mapper.js";
 
-const ALLOWED_TRANSITIONS: Record<TicketStatus, TicketStatus[]> = {
-  [TicketStatus.OPEN]: [TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED],
-  [TicketStatus.IN_PROGRESS]: [TicketStatus.RESOLVED, TicketStatus.CANCELLED],
-  [TicketStatus.RESOLVED]: [TicketStatus.CLOSED],
-  [TicketStatus.CLOSED]: [],
-  [TicketStatus.CANCELLED]: [],
-};
+export { canTransition, getAllowedTransitions } from "../domain/ticket-status-machine.js";
 
 const userRefSelect = {
   select: {
@@ -32,21 +31,6 @@ const ticketDetailInclude = {
     },
   },
 } as const;
-
-export function getAllowedTransitions(currentStatus: TicketStatus): TicketStatus[] {
-  return ALLOWED_TRANSITIONS[currentStatus];
-}
-
-export function canTransition(
-  currentStatus: TicketStatus,
-  nextStatus: TicketStatus,
-): boolean {
-  return getAllowedTransitions(currentStatus).includes(nextStatus);
-}
-
-function formatAllowedTransitions(statuses: TicketStatus[]): string {
-  return statuses.length > 0 ? statuses.join(", ") : "none";
-}
 
 function buildInvalidTransitionError(
   currentStatus: TicketStatus,

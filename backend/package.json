@@ -9,7 +9,8 @@
     "start": "node dist/src/server.js",
     "db:seed": "prisma db seed",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand",
-    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand tests/integration"
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --selectProjects unit",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest --runInBand --selectProjects integration"
   },
   "keywords": [],
   "author": "",
